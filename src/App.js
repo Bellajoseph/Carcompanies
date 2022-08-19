@@ -120,7 +120,7 @@ function App() {
 
 const likeCar = async (index) => {
     try {
-      await contract.methods.likeCar(index).send({ from: address });
+      await contract.methods.likesCar(index).send({ from: address });
     } catch (error) {
       console.log(error);
     } finally {
@@ -129,7 +129,7 @@ const likeCar = async (index) => {
   };
   const dislikeCar = async (index) => {
     try {
-      await contract.methods.dislikeCar(index).send({ from: address });
+      await contract.methods.dislikesCar(index).send({ from: address });
     } catch (error) {
       console.log(error);
     } finally {
@@ -161,7 +161,7 @@ const likeCar = async (index) => {
         await cUSDContract.methods
           .approve(contractAddress, car[_index].price)
           .send({ from: address });
-        await contract.methods.BuyCar(_index).send({ from: address });
+        await contract.methods.buyCar(_index).send({ from: address });
         getCar();
         getBalance();
         alert("Congratulations on your successful purchase, cheer!!!");
