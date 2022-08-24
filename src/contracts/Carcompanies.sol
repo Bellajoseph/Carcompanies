@@ -39,13 +39,19 @@ contract Carcompanies {
         uint likes;
         uint dislikes;
         uint price;
-        uint carsAvailable;
+        uint available;
         uint numberOfreview;
     }
 
     mapping (uint256=> Car) internal cars;
     mapping (uint => Review[]) internal reviewsMap;// mapping reviews
+    mapping(uint => mapping(address => bool)) internal hasBought;
 
+
+    modifier onlyOwner(uint _index){
+        require(msg.sender == cars[_index].owner, "Only the owner can access this function");
+        _;
+    }
 
     function addCar(
         string memory _brand,
@@ -54,9 +60,6 @@ contract Carcompanies {
         uint _price,
         uint _carsAvailable
     )public{
-        uint _numberOfreview = 0;
-
-
         cars[carLength] = Car(
             payable(msg.sender),
             _brand,
@@ -66,7 +69,7 @@ contract Carcompanies {
             0,
             _price,
             _carsAvailable,
-            _numberOfreview
+            0
         );
         carLength++;
     }
@@ -93,7 +96,7 @@ contract Carcompanies {
             c.likes,
             c.dislikes,
             c.price,
-            c.carsAvailable,
+            c.available,
             c.numberOfreview,
             reviews
         );
@@ -109,24 +112,38 @@ contract Carcompanies {
         cars[index].dislikes++;
     }
 
-       // add a revie to a book
+    // add a revie to a book
    function addReview(uint _index, string memory _reviews) public{
+    require(hasBought[_index][msg.sender], "Only buyers can review the cars");
     reviewsMap[_index].push(Review(_index, address(msg.sender), _reviews));
     cars[_index].numberOfreview++;
-  }
+    }
 
 
-function buyCar(uint _index) public payable  {
-        require(cars[_index].carsAvailable > 0, "sold out");
+    function buyCar(uint _index, uint256 _quantity) public payable  {
+        Car storage car = cars[_index];
+        require(msg.sender != car.owner, "Owner can't buy their own car");
+        require(car.available >= _quantity, "Not sufficient car available" );
         require(
           IERC20Token(cUsdTokenAddress).transferFrom(
             msg.sender,
             cars[_index].owner,
-            cars[_index].price
+            cars[_index].price * _quantity
           ),
           "Can not perform transactions."
         );
-        cars[_index].carsAvailable--;
+        cars[_index].available-= _quantity;
+        hasBought[_index][msg.sender] = true;
+    }
+
+    //Function to change the price of the car
+    function changePrice(uint _index, uint _price)public onlyOwner(_index){
+        cars[_index].price = _price;
+    }
+
+    //Function to add more cars
+    function addStock(uint _index, uint _stock)public onlyOwner(_index){
+        cars[_index].available += _stock;
     }
 
     //acquiring length of cars
